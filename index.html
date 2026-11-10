@@ -38,18 +38,19 @@ html{height:100%;background:var(--bg);overscroll-behavior:none;touch-action:mani
 body{
   margin:0 auto; background:var(--bg); color:var(--ink);
   font-family:"Overpass","Helvetica Neue",Arial,sans-serif;
-  display:flex; flex-direction:column; gap:10px; padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(10px + env(safe-area-inset-bottom,0px));
-  max-width:520px; height:62vh; height:62dvh; min-height:340px;
+  --h:62dvh;
+  display:flex; flex-direction:column; gap:clamp(4px,calc(var(--h)*.018),10px); padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(10px + env(safe-area-inset-bottom,0px));
+  max-width:520px; height:62vh; height:var(--h);
   user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
 }
 .readout{display:flex;flex-direction:column;align-items:flex-start;gap:2px;cursor:pointer}
 .label{font-size:.9rem;font-weight:700;color:var(--muted)}
-#vNeed{font-size:clamp(3.2rem,17vw,4.8rem);font-weight:900;line-height:1;color:var(--money);letter-spacing:-.01em}
-#vTime{font-size:clamp(1.4rem,6.5vw,1.9rem);font-weight:700;color:var(--time)}
+#vNeed{font-size:clamp(2.2rem,min(17vw,calc(var(--h)*.13)),4.8rem);font-weight:900;line-height:1;color:var(--money);letter-spacing:-.01em}
+#vTime{font-size:clamp(1rem,min(6.5vw,calc(var(--h)*.055)),1.9rem);line-height:1.1;font-weight:700;color:var(--time)}
 .empty{color:var(--faint)!important}
-.pad{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(44px,1fr);gap:6px}
+.pad{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(30px,1fr);gap:clamp(4px,calc(var(--h)*.012),6px)}
 .pad button{
-  font:inherit; font-weight:700; font-size:1.7rem; color:var(--ink);
+  font:inherit; font-weight:700; font-size:clamp(1.1rem,calc(var(--h)*.05),1.7rem); color:var(--ink);
   background:var(--key); border:0; border-radius:12px; cursor:pointer;
 }
 .pad button:active{background:var(--key-press)}
@@ -101,6 +102,13 @@ button:focus-visible{outline:3px solid var(--time);outline-offset:2px}
     else if(e.key==='Escape') press('clear');
   });
   render();
+  // Use the top 62% of the phone's screen, or all of the window if it's smaller
+  // (e.g. the top half of split screen), so the keypad never gets cut off.
+  function fit(){
+    var h=Math.min(window.innerHeight, Math.round(screen.height*0.62));
+    document.body.style.setProperty('--h', h+'px');
+  }
+  window.addEventListener('resize',fit); fit();
 })();
 if('serviceWorker' in navigator && location.protocol!=='file:'){
   window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
