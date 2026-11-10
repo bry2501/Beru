@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Offer Check</title>
+<meta name="description" content="Type the trip minutes, see the minimum pay worth accepting.">
+<meta name="theme-color" content="#F6F6F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101112" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Offer Check">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F6F3; --ink:#2C2C2A; --muted:#6B6B66; --faint:#B4B2A9; --key:#EAE9E4; --key-press:#DCDAD3;
+  --money:#0F6E56; --time:#185FA5;
+  color-scheme:light; box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101112; --ink:#FFFFFF; --muted:#C9C9C3; --faint:#7A7D83; --key:#3A3D42; --key-press:#52565C;
+    --money:#5FF0B4; --time:#9CCBFF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101112; --ink:#FFFFFF; --muted:#C9C9C3; --faint:#7A7D83; --key:#3A3D42; --key-press:#52565C;
+  --money:#5FF0B4; --time:#9CCBFF; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;background:var(--bg);overscroll-behavior:none;touch-action:manipulation}
+body{
+  margin:0 auto; background:var(--bg); color:var(--ink);
+  font-family:"Overpass","Helvetica Neue",Arial,sans-serif;
+  display:flex; flex-direction:column; gap:10px; padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(10px + env(safe-area-inset-bottom,0px));
+  max-width:520px; height:100vh; height:100dvh; min-height:340px;
+  user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+}
+.readout{display:flex;flex-direction:column;align-items:flex-start;gap:2px;cursor:pointer}
+.label{font-size:.9rem;font-weight:700;color:var(--muted)}
+#vNeed{font-size:clamp(3.2rem,17vw,4.8rem);font-weight:900;line-height:1;color:var(--money);letter-spacing:-.01em}
+#vTime{font-size:clamp(1.4rem,6.5vw,1.9rem);font-weight:700;color:var(--time)}
+.empty{color:var(--faint)!important}
+.pad{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(44px,1fr);gap:6px}
+.pad button{
+  font:inherit; font-weight:700; font-size:1.7rem; color:var(--ink);
+  background:var(--key); border:0; border-radius:12px; cursor:pointer;
+}
+.pad button:active{background:var(--key-press)}
+.pad .fn{background:transparent;color:var(--muted);font-size:1.05rem}
+.pad .fn:active{background:var(--key)}
+button:focus-visible{outline:3px solid var(--time);outline-offset:2px}
+</style>
+</head>
+<body>
+  <div class="readout" role="status" aria-live="polite" aria-label="Minimum pay">
+    <span id="vNeed" class="empty">$0.00</span>
+    <span id="vTime" class="empty">0 min</span>
+  </div>
+  <div class="pad">
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+    <span aria-hidden="true"></span><button data-k="0">0</button><span aria-hidden="true"></span>
+  </div>
+<script>
+(function(){
+  var mins='', last=0, FRESH_MS=5000;
+  var vTime=document.getElementById('vTime'), vNeed=document.getElementById('vNeed');
+  // Cheat-sheet math: $15/hr after gas, rising after 20 min to cover the drive back.
+  function needFor(m){ return m<=20 ? 0.286*m : m*(0.29+0.0095*(m-20)); }
+  function render(){
+    var m=mins?parseInt(mins,10):0;
+    vTime.textContent=m+' min'; vTime.classList.toggle('empty',!m);
+    vNeed.textContent='$'+(m?needFor(m):0).toFixed(2); vNeed.classList.toggle('empty',!m);
+  }
+  function press(k){
+    var now=Date.now();
+    if(k==='clear') mins='';
+    else if(k==='back') mins=mins.slice(0,-1);
+    else{
+      // A new number after a pause starts fresh, so you rarely need Clear.
+      if(now-last>FRESH_MS) mins='';
+      if(mins.length<3 && !(mins===''&&k==='0')) mins+=k;
+    }
+    last=now; render();
+  }
+  document.querySelectorAll('.pad button').forEach(function(b){
+    b.addEventListener('click',function(){ press(b.getAttribute('data-k')); });
+  });
+  document.querySelector('.readout').addEventListener('click',function(){ press('clear'); });
+  document.addEventListener('keydown',function(e){
+    if(/^[0-9]$/.test(e.key)) press(e.key);
+    else if(e.key==='Backspace') press('back');
+    else if(e.key==='Escape') press('clear');
+  });
+  render();
+})();
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+</script>
+</body>
+</html>
