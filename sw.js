@@ -1,5 +1,5 @@
 // Offline cache for Offer Check. Bump VERSION when any file changes.
-const VERSION = 'offer-check-v4';
+const VERSION = 'offer-check-v5';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
