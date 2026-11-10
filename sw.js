@@ -1,7 +1,7 @@
 // Offline support for Offer Check.
 // Online: always load the latest version (falls back to the saved copy if the
 // network is slow or down). Offline: use the saved copy.
-const VERSION = 'offer-check-v6';
+const VERSION = 'offer-check-v7';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const SLOW_MS = 2000;
 

@@ -72,7 +72,7 @@ button:focus-visible{outline:3px solid var(--time);outline-offset:2px}
   </div>
 <script>
 (function(){
-  var mins='', last=0, FRESH_MS=5000;
+  var mins='', last=0, timer=0, CLEAR_MS=3000;
   var vTime=document.getElementById('vTime'), vNeed=document.getElementById('vNeed');
   // Cheat-sheet math: $15/hr after gas, rising after 20 min to cover the drive back.
   function needFor(m){ return m<=20 ? 0.286*m : m*(0.29+0.0095*(m-20)); }
@@ -86,12 +86,18 @@ button:focus-visible{outline:3px solid var(--time);outline-offset:2px}
     if(k==='clear') mins='';
     else if(k==='back') mins=mins.slice(0,-1);
     else{
-      // A new number after a pause starts fresh, so you rarely need Clear.
-      if(now-last>FRESH_MS) mins='';
+      // Safety net in case the clear timer was delayed (e.g. app in background).
+      if(now-last>CLEAR_MS) mins='';
       if(mins.length<3 && !(mins===''&&k==='0')) mins+=k;
     }
     last=now; render();
+    // Clear the screen 3 s after the last tap so it's ready for the next offer.
+    clearTimeout(timer);
+    if(mins) timer=setTimeout(function(){ mins=''; render(); }, CLEAR_MS);
   }
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden && mins && Date.now()-last>CLEAR_MS){ mins=''; render(); }
+  });
   document.querySelectorAll('.pad button').forEach(function(b){
     b.addEventListener('click',function(){ press(b.getAttribute('data-k')); });
   });
